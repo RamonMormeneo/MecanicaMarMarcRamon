@@ -42,12 +42,13 @@ float vel[3] = { -3.2,4,0 };
 float coefelastic = 0.000;
 float coefricion = 0.000;
 float possphere[3] = { 0,1,0 };
-float poscapsuleA[3] = { 0, 2, 0 };
-float poscapsuleB[3] = {3, 2, 0};
+float poscapsuleA[3] = { -3.f, 2.f, -2.f };
+float poscapsuleB[3] = { -4.f, 2.f, 2.f };
 float agrav[3]= { 0,-9.81,0 };
 float gravedad[3] = { 0,-9.81,0 };
 float dir[3]{ 0,1,0 };
 float rSphere = 1;
+float rCapsule = 1;
 float angle=45;
 float fontpos[3] = { 0,3,0 };
 void GUI() {
@@ -118,6 +119,12 @@ void GUI() {
 
 			ImGui::DragFloat("Radius", &rSphere, 0.1, 1, 5);
 			Sphere::updateSphere({ possphere[0],possphere[1],possphere[2] }, rSphere);
+
+			ImGui::Checkbox("Play Capsule", &Capsule::renderCapsule);
+			ImGui::DragFloat3("Pos Capsule A", poscapsuleA, 0.1f, -5.0f + rCapsule, 10.0f - rCapsule);
+			ImGui::DragFloat3("Pos Capsule B", poscapsuleB, 0.1f, -5.0f + rCapsule, 10.0f - rCapsule);
+			ImGui::DragFloat("Capsule Radius", &rCapsule, 0.1, 1, 5);
+			Capsule::updateCapsule({ poscapsuleA[0], poscapsuleA[1], poscapsuleA[2] }, { poscapsuleB[0], poscapsuleB[1], poscapsuleB[2] }, rCapsule);
 		}
 		if (ImGui::CollapsingHeader("Forces"))
 		{
