@@ -36,8 +36,8 @@ bool usegravity = true;
 
 float rate = 1000;
 float lifetime = 5;
-float startpos[3] = { -4,2,4 };
-float endpos[3] = { -4,2,-4 };
+float startpos[3] = { 4,2,4 };
+float endpos[3] = { 4,2,-4 };
 float vel[3] = { -3.2,4,0 };
 float coefelastic = 0.000;
 float coefricion = 0.000;
@@ -154,10 +154,6 @@ void GUI() {
 }
 //variables
 
-
-
-
-
 float *PPos = new float[LilSpheres::maxParticles * 3];
 float *PVel = new float[LilSpheres::maxParticles * 3];
 float *Ptime = new float[LilSpheres::maxParticles];
@@ -204,6 +200,62 @@ bool ColisionSphere(float dt, int i)
 	}
 }
 
+glm::vec3 capsuleProyec(float arr[3])
+{
+	glm::vec3 posA = Capsule::GetPosA();
+	glm::vec3 posB = Capsule::GetPosB();
+	glm::vec3 newVector = posB - posA;
+	float incog;
+	float noincog;
+
+	float d = (arr[0] * newVector.x + arr[1] * newVector.y + arr[2] * newVector.z)* -1;
+
+	incog = pow(newVector.x, 2) + pow(newVector.y, 2) + pow(newVector.z, 2);
+	noincog = ((posA.x*newVector.x) + (posA.y*newVector.y) + (posA.z*newVector.z) + d) * -1;
+
+	float h = noincog / incog;
+
+	glm::vec3 proyec = { posA.x + newVector.x * h, posA.y + newVector.y * h, posA.z + newVector.z * h };
+
+	return proyec;
+}
+
+bool ColisionCapsule(float dt, int i)
+{
+	float newPos[3];
+	for (int j = 0; j < 3; j++)
+	{
+		newPos[j] = PPos[j + i * 3] + PVel[j + i * 3] * dt;
+	}
+
+	glm::vec3 proyec = capsuleProyec(newPos);
+
+	//colision
+	float vec[3] = { newPos[0] - proyec.x,newPos[1] - proyec.y,newPos[2] - proyec.z };
+	float distance = sqrt(pow(vec[0], 2) + pow(vec[1], 2) + pow(vec[2], 2));
+	float radius = Capsule::GetRadius();
+
+	glm::vec3 posA = Capsule::GetPosA() - radius/1.5f;
+	glm::vec3 posB = Capsule::GetPosB() + radius/1.5f;
+	glm::vec3 resta1 = posB - posA;
+	float newVector = sqrt(pow(resta1.x, 2) + pow(resta1.y, 2) + pow(resta1.z, 2));
+
+	float resta2[3] = { posA.x - newPos[0], posA.y - newPos[1], posA.z - newPos[2] };
+	float newVector2 = sqrt(pow(resta2[0], 2) + pow(resta2[1], 2) + pow(resta2[2], 2));
+
+	float resta3[3] = { posB.x - newPos[0], posB.y - newPos[1], posB.z - newPos[2] };
+	float newVector3 = sqrt(pow(resta3[0], 2) + pow(resta3[1], 2) + pow(resta3[2], 2));
+
+	if (distance < radius && newVector2 <= newVector && newVector3 <= newVector )
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
 
 bool t1istheright(float VectorPPf[3], float Point[3], float t1, float t2)
 {
@@ -231,6 +283,13 @@ bool t1istheright(float VectorPPf[3], float Point[3], float t1, float t2)
 	}
 	return false;
 }
+
+int escalar(float vec1[], float vec2[])
+{
+	return (vec1[0]*vec2[0]) + (vec1[1]*vec2[1]) + (vec1[2]*vec2[2]);
+}
+
+
 int  DEGREE = 3.1415926/180;
 void PhysicsUpdate(float dt) {
 	// Do your   here...
@@ -256,7 +315,7 @@ void PhysicsUpdate(float dt) {
 			{
 				if (Ptime[i] == 0)
 				{
-					/*float r = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX / modul));
+					float r = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX / modul));
 					for (int j = 0; j < 3; j++)
 					{
 						float randomY;
@@ -271,8 +330,8 @@ void PhysicsUpdate(float dt) {
 						PPos[j + i * 3] = Uvector[j] * r + startpos[j] - randomY;
 						PVel[j + i * 3] = vel[j];
 					}
-					Ptime[i] += dt;*/
-					float ranfodZ = static_cast<float>(rand() % 361);
+					Ptime[i] += dt;
+					/*float ranfodZ = static_cast<float>(rand() % 361);
 					float initspeed[3];
 					float aux = (ranfodZ*3.14)/180;
 
@@ -285,7 +344,7 @@ void PhysicsUpdate(float dt) {
 						PPos[j + i * 3] = PPos[j + i * 3] + initspeed[j] * dt;
 						PVel[j + i * 3] = initspeed[j ] + dt*gravedad[j];
 					}
-					Ptime[i] += dt;
+					Ptime[i] += dt;*/
 
 				}
 				else if (Ptime[i] >= lifetime)
@@ -363,16 +422,78 @@ void PhysicsUpdate(float dt) {
 						}
 						float VectorPcC[3] = { Sphere::GetPos().x - PColision[0],Sphere::GetPos().y - PColision[1],Sphere::GetPos().z - PColision[2] };
 						float d = 0;
+						float pprima[3];
+						float vprima[3];
+
 						for (int j = 0; j < 3; j++)
 						{
 							d -= VectorPcC[j] * PColision[j];
+							pprima[j] = (PPos[j + i * 3] + PVel[j + i * 3] * dt);
+							vprima[j] = (PVel[j + i * 3] + dt*gravedad[j]);
 						}
+
 						for (int z = 0; z < 3; z++)
 						{
-							PPos[z + i * 3] = (PPos[z + i * 3] + PVel[z + i * 3] * dt) - (1 + coefelastic-coefricion)*(VectorPcC[z] * (PPos[z + i * 3] + PVel[z + i * 3] * dt) + d)*VectorPcC[z];
-							float aux = PPos[z + i * 3];
-							PVel[z + i * 3] = (PVel[z + i * 3] + dt*gravedad[z]) - (2)*(VectorPcC[z] * (PVel[z + i * 3] + dt*gravedad[z]))*VectorPcC[z];
+							PPos[z + i * 3] = (PPos[z + i * 3] + PVel[z + i * 3] * dt) - (1 + coefelastic-coefricion)*(escalar(VectorPcC,pprima) + d)*VectorPcC[z];
+							PVel[z + i * 3] = (PVel[z + i * 3] + dt*gravedad[z]) - (1 + coefelastic - coefricion)*(escalar(VectorPcC,vprima) )*VectorPcC[z];
 						}
+
+					}
+					else if (ColisionCapsule(dt, i) && Capsule::renderCapsule)
+					{
+						float newPos[3];
+						for (int z = 0; z < 3; z++)
+						{
+							newPos[z] = PPos[z + i * 3] + PVel[z + i * 3] * dt;
+						}
+
+						glm::vec3 centroCapsula = capsuleProyec(newPos);
+
+						float VectorPPf[3] = { PPos[i * 3] - (PPos[i * 3] + PVel[i * 3] * dt),PPos[i * 3 + 1] - (PPos[i * 3 + 1] + PVel[i * 3 + 1] * dt),PPos[i * 3 + 2] - (PPos[i * 3 + 2] + PVel[i * 3 + 2] * dt) };
+						float PofRect[3] = { PPos[i * 3],PPos[i * 3 + 1],PPos[i * 3 + 2] };
+						float a, b, c;
+						float PC[3] = { PofRect[0] - centroCapsula.x, PofRect[1] - centroCapsula.y, PofRect[2] - centroCapsula.z };
+						a = pow(VectorPPf[0], 2) + pow(VectorPPf[1], 2) + pow(VectorPPf[2], 2);
+						b = (2 * PC[0] * VectorPPf[0]) + (2 * PC[1] * VectorPPf[1]) + (2 * PC[2] * VectorPPf[2]);
+						c = pow(PC[0], 2) + pow(PC[1], 2) + pow(PC[2], 2) - Capsule::GetRadius();
+						float t1, t2;
+						t1 = (-b - sqrt(pow(b, 2) - 4 * a*c)) / 2*a;
+						t2 = (-b + sqrt(pow(b, 2) - 4 * a*c)) / 2*a;
+						float pColision[3];
+						if (t1istheright(VectorPPf, PofRect, t1, t2))
+						{
+							for (int j = 0; j < 3; j++)
+							{
+								pColision[j] = PofRect[j] + VectorPPf[j] * t1;
+							}
+						}
+						else
+						{
+							for (int j = 0; j < 3; j++)
+							{
+								pColision[j] = PofRect[j] + VectorPPf[j] * t2;
+							}
+
+						}
+
+						float CC[3] = { (pColision[0] - centroCapsula.x)/Capsule::GetRadius(), (pColision[1] - centroCapsula.y) / Capsule::GetRadius(), (pColision[2] - centroCapsula.z) / Capsule::GetRadius() };
+						float d = (CC[0] * pColision[0] + CC[1] * pColision[1] + CC[2] * pColision[2]) * -1;
+						float pprima[3];
+						float vprima[3];
+
+						for (int z = 0; z < 3; z++)
+						{
+							pprima[z] = (PPos[z + i * 3] + PVel[z + i * 3] * dt);
+							vprima[z] = (PVel[z + i * 3] + dt*gravedad[z]);
+						}
+
+						for (int j = 0; j < 3; j++)
+						{
+							PPos[j + i * 3] = (PPos[j + i * 3] + PVel[j + i * 3] * dt) - (1 + coefelastic - coefricion) * (escalar(CC, pprima) + d)*CC[j];
+							PVel[j + i * 3] = (PVel[j + i * 3] + dt*gravedad[j]) - (1+coefelastic-coefricion)*(escalar(CC, vprima))*CC[j];
+						
+						}
+
 
 					}
 					else
