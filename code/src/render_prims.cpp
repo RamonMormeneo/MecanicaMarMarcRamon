@@ -3,8 +3,8 @@
 #include <glm\gtc\matrix_transform.hpp>
 
 // Boolean variables allow to show/hide the primitives
-bool renderSphere = true;
-bool renderCapsule = false;
+
+bool renderCapsule = true;
 bool renderParticles = true;
 bool renderCloth = false;
 bool renderCube = false;
@@ -14,6 +14,7 @@ namespace Sphere {
 	extern void cleanupSphere();
 	extern void updateSphere(glm::vec3 pos, float radius = 1.f);
 	extern void drawSphere();
+	extern bool renderSphere = true;
 }
 namespace Capsule {
 	extern void setupCapsule(glm::vec3 posA = glm::vec3(-3.f, 2.f, -2.f), glm::vec3 posB = glm::vec3(-4.f, 2.f, 2.f), float radius = 1.f);
@@ -29,6 +30,7 @@ namespace LilSpheres {
 	extern void cleanupParticles();
 	extern void updateParticles(int startIdx, int count, float* array_data);
 	extern void drawParticles(int startIdx, int count);
+
 }
 namespace ClothMesh {
 	extern void setupClothMesh();
@@ -58,10 +60,9 @@ void cleanupPrims() {
 	ClothMesh::cleanupClothMesh();
 	Cube::cleanupCube();
 }
-int m_RamonEsGili = 100;
-#include <iostream>
+
 void renderPrims() {
-	if (renderSphere)
+	if (Sphere::renderSphere)
 		Sphere::drawSphere();
 	if (renderCapsule)
 		Capsule::drawCapsule();

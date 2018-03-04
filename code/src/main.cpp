@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
 	PhysicsInit();
 	// Setup ImGui binding
 	ImGui_ImplSdlGL3_Init(mainwindow);
-
+	
 	bool quit_app = false;
 	while (!quit_app) {
 		SDL_Event eve;
