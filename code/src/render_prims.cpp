@@ -21,6 +21,7 @@ namespace Capsule {
 	extern void cleanupCapsule();
 	extern void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius = 1.f);
 	extern void drawCapsule();
+	extern bool renderCapsule = true;
 }
 namespace LilSpheres {
 	extern const int maxParticles;

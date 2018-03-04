@@ -20,6 +20,15 @@ namespace Sphere {
 	extern bool renderSphere;
 	extern void updateSphere(glm::vec3 pos, float radius = 1.f);
 }
+
+namespace Capsule {
+	extern int GetRadius();
+	extern glm::vec3 GetPosA();
+	extern glm::vec3 GetPosB();
+	extern bool renderCapsule;
+	extern void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius = 1.f);
+}
+
 bool show_test_window = false;
 bool PlaySimulation = false;
 bool Show_Emitter = true;
@@ -33,6 +42,8 @@ float vel[3] = { -3.2,4,0 };
 float coefelastic = 0.000;
 float coefricion = 0.000;
 float possphere[3] = { 0,1,0 };
+float poscapsuleA[3] = { 0, 2, 0 };
+float poscapsuleB[3] = {3, 2, 0};
 float agrav[3]= { 0,-9.81,0 };
 float gravedad[3] = { 0,-9.81,0 };
 float dir[3]{ 0,1,0 };
@@ -192,7 +203,6 @@ bool ColisionSphere(float dt, int i)
 		return false;
 	}
 }
-
 
 
 bool t1istheright(float VectorPPf[3], float Point[3], float t1, float t2)

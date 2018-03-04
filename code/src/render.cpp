@@ -496,6 +496,12 @@ GLuint capsuleVbo[2];
 GLuint capsuleShader[3];
 GLuint capsuleProgram;
 float radius;
+glm::vec3 posA;
+glm::vec3 posB;
+extern int GetRadius();
+extern glm::vec3 GetPosA();
+extern glm::vec3 GetPosB();
+
 
 const char* capsule_vertShader =
 "#version 330\n\
@@ -598,6 +604,8 @@ void main() {\n\
 
 void setupCapsule(glm::vec3 posA, glm::vec3 posB, float radius) {
 	Capsule::radius = radius;
+	Capsule::posA = posA;
+	Capsule::posB = posB;
 	glGenVertexArrays(1, &capsuleVao);
 	glBindVertexArray(capsuleVao);
 	glGenBuffers(2, capsuleVbo);
@@ -642,8 +650,20 @@ void cleanupCapsule() {
 	glDeleteShader(capsuleShader[1]);
 	glDeleteShader(capsuleShader[2]);
 }
+int GetRadius()
+{
+	return radius;
+}
+glm::vec3 GetPosA()
+{
+	return posA;
+}
+glm::vec3 GetPosB()
+{
+	return posB;
+}
 void updateCapsule(glm::vec3 posA, glm::vec3 posB, float radius) {
-	float vertPos[] = {posA.x, posA.y, posA.z, posB.z, posB.y, posB.z};
+	float vertPos[] = {posA.x, posA.y, posA.z, posB.x, posB.y, posB.z};
 	glBindBuffer(GL_ARRAY_BUFFER, capsuleVbo[0]);
 	float* buff = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_WRITE_ONLY);
 	buff[0] = posA.x; buff[1] = posA.y; buff[2] = posA.z;
