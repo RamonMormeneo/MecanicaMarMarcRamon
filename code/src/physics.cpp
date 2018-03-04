@@ -38,7 +38,8 @@ float rate = 1000;
 float lifetime = 5;
 float startpos[3] = { 4,2,4 };
 float endpos[3] = { 4,2,-4 };
-float vel[3] = { -3.2,4,0 };
+float vel[3];
+float velfont[3]= { -3.2,4,0 };
 float coefelastic = 0.000;
 float coefricion = 0.000;
 float possphere[3] = { 0,1,0 };
@@ -49,8 +50,13 @@ float gravedad[3] = { 0,-9.81,0 };
 float dir[3]{ 0,1,0 };
 float rSphere = 1;
 float rCapsule = 1;
-float angle=45;
+float angle=60;
 float fontpos[3] = { 0,3,0 };
+float dirfont[3] = { 0,1,0 };
+int Currentemiter = 0;
+const int Cascade= 1;
+const int Font = 0;
+
 void GUI() {
 	bool show = true;
 	
@@ -65,33 +71,58 @@ void GUI() {
 		{
 			ImGui::DragFloat("Rate", &rate, 1, 100, LilSpheres::maxParticles);
 			ImGui::DragFloat("Liftime", &lifetime, 1,1,30);
-			ImGui::DragFloat3("Cascade Pos A", startpos, 0.1f, -5.0f,10.0f);
-			if (startpos[1] < 0)
+			ImGui::RadioButton("cascade",&Currentemiter, Cascade); ImGui::SameLine(); ImGui::RadioButton("font", &Currentemiter, Font);
+			if (Currentemiter)
 			{
-				startpos[1] = 0;
+				ImGui::DragFloat3("Cascade Pos A", startpos, 0.1f, -5.0f, 10.0f);
+				if (startpos[1] < 0)
+				{
+					startpos[1] = 0;
+				}
+				if (startpos[0] > 5)
+				{
+					startpos[0] = 5;
+				}
+				if (startpos[2] > 5)
+				{
+					startpos[2] = 5;
+				}
+				ImGui::DragFloat3("Cascade Pos B", endpos, 0.1f, -5.0f, 10.0f);
+				if (endpos[1] < 0)
+				{
+					endpos[1] = 0;
+				}
+				if (endpos[0] > 5)
+				{
+					endpos[0] = 5;
+				}
+				if (endpos[2] > 5)
+				{
+					endpos[2] = 5;
+				}
+				ImGui::DragFloat3("Vel", velfont, 0.1f, -5, 10);
+				for (int i = 0; i < 3; i++)
+				{
+					vel[i] = velfont[i];
+				}
 			}
-			if (startpos[0] > 5)
+			else
 			{
-				startpos[0] = 5;
+				ImGui::DragFloat3("Font Pos ", fontpos, 0.1f, -5.0f, 10.0f);
+				if (fontpos[1] < 0)
+				{
+					fontpos[1] = 0;
+				}
+				if (fontpos[0] > 5)
+				{
+					fontpos[0] = 5;
+				}
+				if (fontpos[2] > 5)
+				{
+					fontpos[2] = 5;
+				}
 			}
-			if (startpos[2] > 5)
-			{
-				startpos[2] = 5;
-			}
-			ImGui::DragFloat3("Cascade Pos B", endpos, 0.1f, -5.0f, 10.0f);
-			if (endpos[1] < 0)
-			{
-				endpos[1] = 0;
-			}
-			if (endpos[0] > 5)
-			{
-				endpos[0] = 5;
-			}
-			if (endpos[2] > 5)
-			{
-				endpos[2] = 5;
-			}
-			ImGui::DragFloat3("Vel", vel, 0.1f, -5, 10);
+			
 			
 		}
 		if (ImGui::CollapsingHeader("Elasticity and Friction"))
@@ -167,6 +198,8 @@ float *Ptime = new float[LilSpheres::maxParticles];
 bool colisions = false;
 const int dsuelo = 0;
 float normalsuelo[3] = { 0,-1, 0 };
+
+
 
 void PhysicsInit() {
 	
@@ -316,43 +349,57 @@ void PhysicsUpdate(float dt) {
 		{
 			Uvector[j] = Uvector[j] / modul;
 		}
+		int ray = 0;
 		for (int i = 0; i <= LilSpheres::maxParticles; i++)
 		{
+			
 			if ((i >= LilSpheres::startu && i <= LilSpheres::end) || (LilSpheres::end < LilSpheres::startu && (i < LilSpheres::end || i>LilSpheres::startu)))
 			{
 				if (Ptime[i] == 0)
 				{
-					float r = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX / modul));
-					for (int j = 0; j < 3; j++)
+					if (Currentemiter)
 					{
-						float randomY;
-						if (j == 1)
+						float r = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX / modul));
+						for (int j = 0; j < 3; j++)
 						{
-							randomY = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX / (0.4 - 0.1)));
+							float randomY;
+							if (j == 1)
+							{
+								randomY = (static_cast<float>(rand()) / static_cast<float>(RAND_MAX / (0.4 - 0.1)));
+							}
+							else
+							{
+								randomY = 0;
+							}
+							PPos[j + i * 3] = Uvector[j] * r + startpos[j] - randomY;
+							PVel[j + i * 3] = vel[j];
 						}
-						else
-						{
-							randomY = 0;
-						}
-						PPos[j + i * 3] = Uvector[j] * r + startpos[j] - randomY;
-						PVel[j + i * 3] = vel[j];
+						Ptime[i] += dt;
 					}
-					Ptime[i] += dt;
-					/*float ranfodZ = static_cast<float>(rand() % 361);
-					float initspeed[3];
-					float aux = (ranfodZ*3.14)/180;
-
-					aux = static_cast<float>(sin(aux));
-					initspeed[0] = cos(aux)*dir[0]* cos(angle*DEGREE)*3;
-					initspeed[1] = static_cast<float>(sin(aux))*dir[1]*3;
-					initspeed[2] = cos(aux)*dir[2]*sin(angle*DEGREE)*3;
-					for (int j = 0; j < 3; j++)
+					else
 					{
-						PPos[j + i * 3] = PPos[j + i * 3] + initspeed[j] * dt;
-						PVel[j + i * 3] = initspeed[j ] + dt*gravedad[j];
-					}
-					Ptime[i] += dt;*/
+						float anglez = static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / angle));
 
+						vel[0] = cos((anglez * 3.14) / 180);
+						vel[1] = sin((anglez * 3.14) / 180);
+						vel[2] = cos((anglez * 3.14) / 180);
+						float angleY = (float)ray / (float)30 * 360.0f;
+						vel[0] = vel[0] * cos((angleY * 3.14) / 180) * 3.0f;
+						vel[1] = vel[1] * sin((angleY * 3.14) / 180) * 3.0f;
+						vel[2] = vel[2] * 3.0f;
+
+						ray++;
+						if (ray > 30)
+						{
+							ray = 0;
+						}
+						for (int j = 0; j < 3; j++)
+						{
+							PPos[j + i * 3] = fontpos[j];
+							PVel[j + i * 3] = vel[j];
+						}
+						Ptime[i] += dt;
+					}
 				}
 				else if (Ptime[i] >= lifetime)
 				{
@@ -368,9 +415,9 @@ void PhysicsUpdate(float dt) {
 				else
 				{
 
-					if (PPos[i * 3 + 1] + PVel[i * 3 + 1] * dt <= 0)
+					if (PPos[i * 3 + 1] + PVel[i * 3 + 1] * dt <= 0 || PPos[i * 3 + 1] + PVel[i * 3 + 1] * dt >= 10)
 					{
-
+						
 						for (int j = 0; j < 3; j++)
 						{
 							PVel[j + i * 3] = (PVel[j + i * 3] + dt*gravedad[j]) - (1 + coefelastic-coefricion)*(normalsuelo[j] * (PVel[j + i * 3] + dt*gravedad[j]))*normalsuelo[j];
@@ -379,14 +426,15 @@ void PhysicsUpdate(float dt) {
 
 					}
 
-					else if (PPos[i * 3] + PVel[i * 3] * dt > 5 || PPos[i * 3] + PVel[i * 3] * dt < -5)
+					else if (PPos[i * 3] + PVel[i * 3] * dt >= 5 || PPos[i * 3] + PVel[i * 3] * dt <= -5)
 					{
+						
 						for (int j = 0; j < 3; j++)
 						{
 							PVel[j + i * 3] = (PVel[j + i * 3] + dt*gravedad[j]) - (1 + coefelastic-coefricion)*(normalderecha[j] * (PVel[j + i * 3] + dt*gravedad[j]))*normalderecha[j];
 						}
 					}
-					else if (PPos[i * 3 + 2] + PVel[i * 3 + 2] * dt > 5 || PPos[i * 3 + 2] + PVel[i * 3 + 2] * dt < -5)
+					else if (PPos[i * 3 + 2] + PVel[i * 3 + 2] * dt >= 5 || PPos[i * 3 + 2] + PVel[i * 3 + 2] * dt <= -5)
 					{
 						for (int j = 0; j < 3; j++)
 						{
